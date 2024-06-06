@@ -1,0 +1,15 @@
+<resources>
+
+    <style name="Theme.WatchInUkrainian" parent="@style/Theme.Leanback">
+        <item name="android:colorPrimaryDark">@color/fastlane_background</item>
+        <item name="playbackControlsTimeStyle">@style/PlaybackControlsTime</item>
+        <item name="playbackProgressPrimaryColor">@color/color_accent</item>
+    </style>
+
+    <style name="PlaybackControlsTime">
+        <item name="android:textSize">24sp</item>
+        <item name="android:textColor">@color/color_white</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+
+</resources>
