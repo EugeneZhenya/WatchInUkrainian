@@ -32,7 +32,13 @@ data class Result(
     @SerializedName("trailerUrl")
     val trailerUrl: String,
     @SerializedName("videoUrl")
-    val videoUrl: String
+    val videoUrl: String,
+    @SerializedName("tvId")
+    val tvId: Int,
+    @SerializedName("season")
+    val season: Int,
+    @SerializedName("episode")
+    val episode: Int,
 )
 
 fun Result.toDomainMovie() = Movie(
@@ -45,6 +51,9 @@ fun Result.toDomainMovie() = Movie(
     coverUrl?.let { "https://image.tmdb.org/t/p/w780/$it" },
     videoUrl,
     trailerUrl,
-    releaseDate
+    releaseDate,
+    tvId,
+    season,
+    episode
 )
 

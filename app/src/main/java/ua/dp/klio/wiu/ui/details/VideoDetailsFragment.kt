@@ -5,6 +5,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.ContextCompat
@@ -16,7 +17,10 @@ import androidx.leanback.widget.ArrayObjectAdapter
 import androidx.leanback.widget.ClassPresenterSelector
 import androidx.leanback.widget.DetailsOverviewRow
 import androidx.leanback.widget.FullWidthDetailsOverviewSharedElementHelper
+import androidx.leanback.widget.HeaderItem
 import androidx.leanback.widget.ImageCardView
+import androidx.leanback.widget.ListRow
+import androidx.leanback.widget.ListRowPresenter
 import androidx.leanback.widget.OnActionClickedListener
 import androidx.leanback.widget.OnItemViewClickedListener
 import androidx.leanback.widget.Presenter
@@ -25,9 +29,15 @@ import androidx.leanback.widget.RowPresenter
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import ua.dp.klio.wiu.player.PlaybackActivity
 import ua.dp.klio.wiu.R
+import ua.dp.klio.wiu.data.server.RemoteConnection
+import ua.dp.klio.wiu.data.server.Result
+import ua.dp.klio.wiu.data.server.toDomainMovie
 import ua.dp.klio.wiu.domain.Movie
+import ua.dp.klio.wiu.ui.main.CardPresenter
 import ua.dp.klio.wiu.ui.main.MainActivity
 
 /**
@@ -53,7 +63,10 @@ class VideoDetailsFragment : DetailsSupportFragment() {
             mAdapter = ArrayObjectAdapter(mPresenterSelector)
             setupDetailsOverviewRow()
             setupDetailsOverviewRowPresenter()
-            // setupRelatedMovieListRow()
+            if ((mSelectedMovie!!.season > 0) && (mSelectedMovie!!.episode == 0))
+            {
+                setupRelatedMovieListRow()
+            }
             adapter = mAdapter
             initializeBackground(mSelectedMovie)
             onItemViewClickedListener = ItemViewClickedListener()
@@ -84,10 +97,18 @@ class VideoDetailsFragment : DetailsSupportFragment() {
     private fun setupDetailsOverviewRow() {
         val row = DetailsOverviewRow(mSelectedMovie)
         row.imageDrawable = ContextCompat.getDrawable(activity!!, R.drawable.default_background)
-        val width = convertDpToPixel(activity!!, DETAIL_THUMB_WIDTH)
-        val height = convertDpToPixel(activity!!, DETAIL_THUMB_HEIGHT)
+        var width = convertDpToPixel(activity!!, DETAIL_THUMB_WIDTH)
+        var height = convertDpToPixel(activity!!, DETAIL_THUMB_HEIGHT)
+        var posterUrl = mSelectedMovie?.poster
+
+        if (mSelectedMovie?.episode!! > 0) {
+            width = convertDpToPixel(activity!!, DETAIL_THUMB_HEIGHT)
+            height = convertDpToPixel(activity!!, DETAIL_THUMB_WIDTH)
+            posterUrl = mSelectedMovie?.coverImageUrl
+        }
+
         Glide.with(activity!!)
-            .load(mSelectedMovie?.poster)
+            .load(posterUrl)
             .centerCrop()
             .error(R.drawable.default_background)
             .into<SimpleTarget<Drawable>>(object : SimpleTarget<Drawable>(width, height) {
@@ -108,12 +129,27 @@ class VideoDetailsFragment : DetailsSupportFragment() {
                 resources.getString(R.string.watch_trailer)
             )
         )
-        actionAdapter.add(
-            Action(
-                ACTION_WATCH_MOVIE,
-                resources.getString(R.string.watch_movie)
+
+        if (mSelectedMovie!!.tvId == 0)
+        {
+            actionAdapter.add(
+                Action(
+                    ACTION_WATCH_MOVIE,
+                    resources.getString(R.string.watch_movie)
+                )
             )
-        )
+        }
+
+        if (mSelectedMovie!!.episode > 0)
+        {
+            actionAdapter.add(
+                Action(
+                    ACTION_WATCH_MOVIE,
+                    resources.getString(R.string.watch_movie)
+                )
+            )
+        }
+
         row.actionsAdapter = actionAdapter
 
         mAdapter.add(row)
@@ -151,20 +187,32 @@ class VideoDetailsFragment : DetailsSupportFragment() {
         mPresenterSelector.addClassPresenter(DetailsOverviewRow::class.java, detailsPresenter)
     }
 
-    /* private fun setupRelatedMovieListRow() {
-        val subcategories = arrayOf(getString(R.string.related_movies))
-        val list = MovieList.list
+    private fun setupRelatedMovieListRow() {
+        Log.v("TAG", "setupRelatedMovieListRow")
+        val cardPresenter = CardPresenter()
 
-        Collections.shuffle(list)
-        val listRowAdapter = ArrayObjectAdapter(CardPresenter())
-        for (j in 0 until NUM_COLS) {
-            listRowAdapter.add(list[j % 5])
+        val startingIndex = 0
+        for (i in startingIndex until mSelectedMovie!!.season) {
+            val seasonId = i+1
+            val seasonTitle = "Сезон $seasonId"
+            Log.v("TAG", seasonTitle)
+
+            val listRowsAdapter = ArrayObjectAdapter(cardPresenter)
+            GlobalScope.launch {
+                val seasonRowAdapter = RemoteConnection.service
+                    .listEpisodesTVs(mSelectedMovie!!.tvId, seasonId)
+                    .results.map { it.toDomainMovie() }
+
+                listRowsAdapter.addAll(0, seasonRowAdapter)
+            }
+
+            val header = HeaderItem(0, seasonTitle)
+            mAdapter.add(ListRow(header, listRowsAdapter))
+
+            mPresenterSelector.addClassPresenter(ListRow::class.java, ListRowPresenter())
         }
 
-        val header = HeaderItem(0, subcategories[0])
-        mAdapter.add(ListRow(header, listRowAdapter))
-        mPresenterSelector.addClassPresenter(ListRow::class.java, ListRowPresenter())
-    } */
+    }
 
     private fun convertDpToPixel(context: Context, dp: Int): Int {
         val density = context.applicationContext.resources.displayMetrics.density
@@ -180,7 +228,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
         ) {
             if (item is Movie) {
                 val intent = Intent(activity!!, DetailsActivity::class.java)
-                intent.putExtra(resources.getString(R.string.movie), mSelectedMovie)
+                intent.putExtra(resources.getString(R.string.movie), item)
 
                 val bundle =
                     ActivityOptionsCompat.makeSceneTransitionAnimation(

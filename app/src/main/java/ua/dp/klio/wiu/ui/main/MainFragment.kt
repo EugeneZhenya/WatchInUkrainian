@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.DisplayMetrics
+import android.util.Log
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.TextView
@@ -91,33 +92,6 @@ class MainFragment : BrowseSupportFragment() {
     }
 
     private fun loadRows() {
-        /* val list = MovieList.list
-
-        val rowsAdapter = ArrayObjectAdapter(ListRowPresenter())
-        val cardPresenter = CardPresenter()
-
-        for (i in 0 until NUM_ROWS) {
-            if (i != 0) {
-                Collections.shuffle(list)
-            }
-            val listRowAdapter = ArrayObjectAdapter(cardPresenter)
-            for (j in 0 until NUM_COLS) {
-                listRowAdapter.add(list[j % 5])
-            }
-            val header = HeaderItem(i.toLong(), MovieList.MOVIE_CATEGORY[i])
-            rowsAdapter.add(ListRow(header, listRowAdapter))
-        }
-
-        val gridHeader = HeaderItem(NUM_ROWS.toLong(), "PREFERENCES")
-
-        val mGridPresenter = GridItemPresenter()
-        val gridRowAdapter = ArrayObjectAdapter(mGridPresenter)
-        gridRowAdapter.add(resources.getString(R.string.grid_view))
-        gridRowAdapter.add(getString(R.string.error_fragment))
-        gridRowAdapter.add(resources.getString(R.string.personal_settings))
-        rowsAdapter.add(ListRow(gridHeader, gridRowAdapter))
-
-        adapter = rowsAdapter */
         viewLifecycleOwner.lifecycleScope.launch {
             adapter = buildAdapter()
         }
@@ -127,6 +101,7 @@ class MainFragment : BrowseSupportFragment() {
         val rowsAdapter = ArrayObjectAdapter(ListRowPresenter())
         val cardPresenter = CardPresenter()
 
+        // Фільми
         val movies = RemoteConnection.service
             .listLastMovies()
             .results.map { it.toDomainMovie() }
@@ -137,7 +112,18 @@ class MainFragment : BrowseSupportFragment() {
         val moviesHeader = HeaderItem(0, moviesCategoryTitle)
         rowsAdapter.add(ListRow(moviesHeader, moviesListRowsAdapter))
 
-        // Останні мультфільми
+        // Серіали
+        val tvs = RemoteConnection.service
+            .listLastTVs()
+            .results.map { it.toDomainMovie() }
+
+        val tvsCategoryTitle = "Серіали"
+        val tvsListRowsAdapter = ArrayObjectAdapter(cardPresenter)
+        tvsListRowsAdapter.addAll(0, tvs)
+        val tvsHeader = HeaderItem(0, tvsCategoryTitle)
+        rowsAdapter.add(ListRow(tvsHeader, tvsListRowsAdapter))
+
+        // Мультфільми
         val cartoons = RemoteConnection.service
             .listLastCartoons()
             .results.map { it.toDomainMovie() }
@@ -147,6 +133,17 @@ class MainFragment : BrowseSupportFragment() {
         cartoonsListRowsAdapter.addAll(0, cartoons)
         val cartoonsHeader = HeaderItem(1, cartoonsCategoryTitle)
         rowsAdapter.add(ListRow(cartoonsHeader, cartoonsListRowsAdapter))
+
+        // Мультсеріали
+        val animes = RemoteConnection.service
+            .listLastAnimes()
+            .results.map { it.toDomainMovie() }
+
+        val animesCategoryTitle = "Мультсеріали"
+        val animesListRowsAdapter = ArrayObjectAdapter(cardPresenter)
+        animesListRowsAdapter.addAll(0, animes)
+        val animesHeader = HeaderItem(1, animesCategoryTitle)
+        rowsAdapter.add(ListRow(animesHeader, animesListRowsAdapter))
 
         return rowsAdapter
     }

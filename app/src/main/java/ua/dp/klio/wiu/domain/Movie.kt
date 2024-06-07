@@ -15,7 +15,10 @@ data class Movie(
     var coverImageUrl: String? = null,
     var videoUrl: String? = null,
     var trailerUrl: String? = null,
-    var releaseDate: String? = null
+    var releaseDate: String? = null,
+    var tvId: Int = 0,
+    var season: Int = 0,
+    var episode: Int = 0
 ) : Serializable {
 
     override fun toString(): String {
@@ -30,6 +33,9 @@ data class Movie(
                 ", videoUrl='" + videoUrl + '\'' +
                 ", trailerUrl='" + trailerUrl + '\'' +
                 ", videoUrl='" + releaseDate + '\'' +
+                ", tvId='" + tvId + '\'' +
+                ", season='" + season + '\'' +
+                ", episode='" + episode + '\'' +
                 '}'
     }
 
