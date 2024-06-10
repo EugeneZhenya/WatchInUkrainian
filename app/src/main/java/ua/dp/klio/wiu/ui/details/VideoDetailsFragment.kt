@@ -36,6 +36,7 @@ import ua.dp.klio.wiu.R
 import ua.dp.klio.wiu.data.server.RemoteConnection
 import ua.dp.klio.wiu.data.server.Result
 import ua.dp.klio.wiu.data.server.toDomainMovie
+import ua.dp.klio.wiu.data.server.toKlioMovie
 import ua.dp.klio.wiu.domain.Movie
 import ua.dp.klio.wiu.ui.main.CardPresenter
 import ua.dp.klio.wiu.ui.main.MainActivity
@@ -63,9 +64,13 @@ class VideoDetailsFragment : DetailsSupportFragment() {
             mAdapter = ArrayObjectAdapter(mPresenterSelector)
             setupDetailsOverviewRow()
             setupDetailsOverviewRowPresenter()
-            if ((mSelectedMovie!!.season > 0) && (mSelectedMovie!!.episode == 0))
+            if ((mSelectedMovie!!.season > 0) && (mSelectedMovie!!.episode == 0) && !mSelectedMovie!!.isKlio)
             {
                 setupRelatedMovieListRow()
+            }
+            if ((mSelectedMovie!!.season == 0) && (mSelectedMovie!!.episode == 0) && mSelectedMovie!!.isKlio)
+            {
+                setupKlioMovieListRow()
             }
             adapter = mAdapter
             initializeBackground(mSelectedMovie)
@@ -107,6 +112,12 @@ class VideoDetailsFragment : DetailsSupportFragment() {
             posterUrl = mSelectedMovie?.coverImageUrl
         }
 
+        if (mSelectedMovie?.isKlio!!) {
+            width = convertDpToPixel(activity!!, DETAIL_THUMB_HEIGHT)
+            height = convertDpToPixel(activity!!, DETAIL_THUMB_WIDTH)
+            posterUrl = mSelectedMovie?.poster
+        }
+
         Glide.with(activity!!)
             .load(posterUrl)
             .centerCrop()
@@ -123,31 +134,52 @@ class VideoDetailsFragment : DetailsSupportFragment() {
 
         val actionAdapter = ArrayObjectAdapter()
 
-        actionAdapter.add(
-            Action(
-                ACTION_WATCH_TRAILER,
-                resources.getString(R.string.watch_trailer)
-            )
-        )
-
-        if (mSelectedMovie!!.tvId == 0)
-        {
+        if (mSelectedMovie!!.isKlio) {
+            if (mSelectedMovie!!.trailerUrl != null)
+            {
+                actionAdapter.add(
+                    Action(
+                        ACTION_WATCH_TRAILER,
+                        resources.getString(R.string.watch_trailer)
+                    )
+                )
+            }
+            if (mSelectedMovie!!.videoUrl != null)
+            {
+                actionAdapter.add(
+                    Action(
+                        ACTION_WATCH_MOVIE,
+                        resources.getString(R.string.watch_movie)
+                    )
+                )
+            }
+        } else {
             actionAdapter.add(
                 Action(
-                    ACTION_WATCH_MOVIE,
-                    resources.getString(R.string.watch_movie)
+                    ACTION_WATCH_TRAILER,
+                    resources.getString(R.string.watch_trailer)
                 )
             )
-        }
 
-        if (mSelectedMovie!!.episode > 0)
-        {
-            actionAdapter.add(
-                Action(
-                    ACTION_WATCH_MOVIE,
-                    resources.getString(R.string.watch_movie)
+            if (mSelectedMovie!!.tvId == 0)
+            {
+                actionAdapter.add(
+                    Action(
+                        ACTION_WATCH_MOVIE,
+                        resources.getString(R.string.watch_movie)
+                    )
                 )
-            )
+            }
+
+            if (mSelectedMovie!!.episode > 0)
+            {
+                actionAdapter.add(
+                    Action(
+                        ACTION_WATCH_MOVIE,
+                        resources.getString(R.string.watch_movie)
+                    )
+                )
+            }
         }
 
         row.actionsAdapter = actionAdapter
@@ -211,6 +243,27 @@ class VideoDetailsFragment : DetailsSupportFragment() {
 
             mPresenterSelector.addClassPresenter(ListRow::class.java, ListRowPresenter())
         }
+
+    }
+
+    private fun setupKlioMovieListRow() {
+        val cardPresenter = CardPresenter()
+
+        val seasonTitle = mSelectedMovie!!.title
+
+        val listRowsAdapter = ArrayObjectAdapter(cardPresenter)
+        GlobalScope.launch {
+            val klioRowAdapter = RemoteConnection.service
+                .listKlioMovies(mSelectedMovie!!.id.toInt())
+                .results.map { it.toKlioMovie() }
+
+            listRowsAdapter.addAll(0, klioRowAdapter)
+        }
+
+        val header = HeaderItem(0, seasonTitle)
+        mAdapter.add(ListRow(header, listRowsAdapter))
+
+        mPresenterSelector.addClassPresenter(ListRow::class.java, ListRowPresenter())
 
     }
 

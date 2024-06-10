@@ -18,7 +18,8 @@ data class Movie(
     var releaseDate: String? = null,
     var tvId: Int = 0,
     var season: Int = 0,
-    var episode: Int = 0
+    var episode: Int = 0,
+    var isKlio: Boolean = false
 ) : Serializable {
 
     override fun toString(): String {
@@ -33,9 +34,10 @@ data class Movie(
                 ", videoUrl='" + videoUrl + '\'' +
                 ", trailerUrl='" + trailerUrl + '\'' +
                 ", videoUrl='" + releaseDate + '\'' +
-                ", tvId='" + tvId + '\'' +
-                ", season='" + season + '\'' +
-                ", episode='" + episode + '\'' +
+                ", tvId=" + tvId +
+                ", season=" + season +
+                ", episode=" + episode +
+                ", isKlio=" + isKlio.toString() +
                 '}'
     }
 

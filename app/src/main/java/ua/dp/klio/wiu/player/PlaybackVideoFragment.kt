@@ -2,6 +2,7 @@ package ua.dp.klio.wiu.player
 
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import androidx.leanback.app.VideoSupportFragment
 import androidx.leanback.app.VideoSupportFragmentGlueHost
 import androidx.leanback.media.MediaPlayerAdapter
@@ -40,6 +41,11 @@ class PlaybackVideoFragment : VideoSupportFragment() {
         } else {
             playerAdapter.setDataSource(Uri.parse(videoUrl))
         }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        view.setBackgroundResource(android.R.color.black);
     }
 
     override fun onPause() {

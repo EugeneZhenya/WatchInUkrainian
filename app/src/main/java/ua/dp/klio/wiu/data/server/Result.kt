@@ -39,6 +39,8 @@ data class Result(
     val season: Int,
     @SerializedName("episode")
     val episode: Int,
+    @SerializedName("isKlio")
+    val isKlio: Boolean,
 )
 
 fun Result.toDomainMovie() = Movie(
@@ -54,6 +56,24 @@ fun Result.toDomainMovie() = Movie(
     releaseDate,
     tvId,
     season,
-    episode
+    episode,
+    isKlio
+)
+
+fun Result.toKlioMovie() = Movie(
+    id.toLong(),
+    title,
+    originalTitle,
+    description,
+    backgroundUrl,
+    posterUrl,
+    coverUrl,
+    videoUrl,
+    trailerUrl,
+    releaseDate,
+    tvId,
+    season,
+    episode,
+    isKlio
 )
 

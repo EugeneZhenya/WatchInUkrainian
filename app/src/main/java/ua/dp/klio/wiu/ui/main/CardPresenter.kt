@@ -52,6 +52,13 @@ class CardPresenter : Presenter() {
                 setMainImageDimensions(CARD_HEIGHT, CARD_WIDTH)
                 mainImageView.loadUrl(movie.coverImageUrl!!)
             }
+        } else if (movie.isKlio) {
+            with(viewHolder.view as ImageCardView) {
+                titleText = movie.title
+                contentText = movie.originalTitle
+                setMainImageDimensions(CARD_HEIGHT, CARD_WIDTH)
+                mainImageView.loadUrl(movie.poster!!)
+            }
         } else {
             with(viewHolder.view as ImageCardView) {
                 titleText = movie.title

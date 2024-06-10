@@ -35,6 +35,7 @@ import ua.dp.klio.wiu.BrowseErrorActivity
 import ua.dp.klio.wiu.R
 import ua.dp.klio.wiu.data.server.RemoteConnection
 import ua.dp.klio.wiu.data.server.toDomainMovie
+import ua.dp.klio.wiu.data.server.toKlioMovie
 import ua.dp.klio.wiu.domain.Movie
 import ua.dp.klio.wiu.ui.details.DetailsActivity
 import java.util.Timer
@@ -100,6 +101,17 @@ class MainFragment : BrowseSupportFragment() {
     private suspend fun buildAdapter(): ArrayObjectAdapter {
         val rowsAdapter = ArrayObjectAdapter(ListRowPresenter())
         val cardPresenter = CardPresenter()
+
+        // KLIO-архів
+        val klioMovies = RemoteConnection.service
+            .listLastFromKlio()
+            .results.map { it.toKlioMovie() }
+
+        val klioCategoryTitle = "Архів «KLIO»"
+        val klioListRowsAdapter = ArrayObjectAdapter(cardPresenter)
+        klioListRowsAdapter.addAll(0, klioMovies)
+        val klioHeader = HeaderItem(0, klioCategoryTitle)
+        rowsAdapter.add(ListRow(klioHeader, klioListRowsAdapter))
 
         // Фільми
         val movies = RemoteConnection.service

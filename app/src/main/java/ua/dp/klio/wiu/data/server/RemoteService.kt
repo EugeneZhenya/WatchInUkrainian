@@ -30,4 +30,14 @@ interface RemoteService {
         @Query("tvId") tvId: Int,
         @Query("seasonNum") seasonNum: Int
     ): RemoteResult
+
+    @GET("lastfromklio")
+    suspend fun listLastFromKlio(
+        @Query("page") page: Int = 1
+    ): RemoteResult
+
+    @GET("getkliopartition")
+    suspend fun listKlioMovies(
+        @Query("partitionId") partitionId: Int
+    ): RemoteResult
 }
